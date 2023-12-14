@@ -139,7 +139,7 @@
                 <div class="act_as_row labels">
                     <!--## date-->
                     <div class="act_as_cell first_column" style="width: 3.51%;">
-                        Date
+                        Due Date
                     </div>
                     <!--## move-->
                     <div class="act_as_cell" style="width: 8.03%">Entry</div>

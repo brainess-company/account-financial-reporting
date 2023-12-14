@@ -9,6 +9,8 @@ import operator
 
 from odoo import _, api, models
 from odoo.tools import float_is_zero
+import logging
+_logger = logging.getLogger(__name__)
 
 
 class GeneralLedgerReport(models.AbstractModel):
@@ -309,9 +311,10 @@ class GeneralLedgerReport(models.AbstractModel):
 
     @api.model
     def _get_move_line_data(self, move_line):
+        _logger.info("=============mv====%s",move_line)
         move_line_data = {
             "id": move_line["id"],
-            "date": move_line["date"],
+            "date": move_line["date_maturity"],
             "entry": move_line["move_name"],
             "entry_id": move_line["move_id"][0],
             "journal_id": move_line["journal_id"][0],
@@ -360,12 +363,16 @@ class GeneralLedgerReport(models.AbstractModel):
         only_posted_moves,
         date_to,
         date_from,
+        due_date_to,
+        due_date_from,
         cost_center_ids,
     ):
         domain = [
             ("display_type", "not in", ["line_note", "line_section"]),
             ("date", ">=", date_from),
             ("date", "<=", date_to),
+            ("date_maturity", ">=", due_date_from),
+            ("date_maturity", "<=", due_date_to),
         ]
         if account_ids:
             domain += [("account_id", "in", account_ids)]
@@ -442,6 +449,8 @@ class GeneralLedgerReport(models.AbstractModel):
         only_posted_moves,
         date_from,
         date_to,
+        due_date_to,
+        due_date_from,
         gen_ld_data,
         cost_center_ids,
         extra_domain,
@@ -454,6 +463,8 @@ class GeneralLedgerReport(models.AbstractModel):
             only_posted_moves,
             date_to,
             date_from,
+            due_date_to,
+            due_date_from,
             cost_center_ids,
         )
         if extra_domain:
@@ -462,6 +473,7 @@ class GeneralLedgerReport(models.AbstractModel):
         move_lines = self.env["account.move.line"].search_read(
             domain=domain, fields=ml_fields, order="date,move_name"
         )
+        _logger.info("==============mlf====%s",move_lines)
         journal_ids = set()
         full_reconcile_ids = set()
         taxes_ids = set()
@@ -496,6 +508,7 @@ class GeneralLedgerReport(models.AbstractModel):
                     gen_ld_data[acc_id][grouped_by] = False
             if acc_id in acc_prt_account_ids:
                 item_ids = self._prepare_ml_items(move_line, grouped_by)
+                _logger.info("==========mlitem===%s",item_ids)
                 for item in item_ids:
                     item_id = item["id"]
                     if item_id not in gen_ld_data[acc_id]:
@@ -701,6 +714,7 @@ class GeneralLedgerReport(models.AbstractModel):
 
     @api.model
     def _calculate_centralization(self, centralized_ml, move_line, date_to):
+        _logger.info("=============s====%s",move_line)
         jnl_id = move_line["journal_id"]
         month = move_line["date"].month
         if jnl_id not in centralized_ml.keys():
@@ -770,6 +784,8 @@ class GeneralLedgerReport(models.AbstractModel):
         company_id = data["company_id"]
         date_to = data["date_to"]
         date_from = data["date_from"]
+        due_date_to = data["due_date_to"]
+        due_date_from = data["due_date_from"]
         partner_ids = data["partner_ids"]
         account_ids = data["account_ids"]
         cost_center_ids = data["cost_center_ids"]
@@ -810,6 +826,8 @@ class GeneralLedgerReport(models.AbstractModel):
             only_posted_moves,
             date_from,
             date_to,
+            due_date_to,
+            due_date_from,
             gen_ld_data,
             cost_center_ids,
             extra_domain,
@@ -848,6 +866,8 @@ class GeneralLedgerReport(models.AbstractModel):
             "currency_name": company.currency_id.name,
             "date_from": data["date_from"],
             "date_to": data["date_to"],
+            "due_date_to": data["due_date_to"],
+            "due_date_from": data["due_date_from"],
             "only_posted_moves": data["only_posted_moves"],
             "hide_account_at_0": data["hide_account_at_0"],
             "show_cost_center": data["show_cost_center"],

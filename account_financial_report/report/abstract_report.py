@@ -12,6 +12,7 @@ class AgedPartnerBalanceReport(models.AbstractModel):
         "partner_id",
         "journal_id",
         "date",
+        "date_maturity",
         "ref",
         "id",
         "move_id",

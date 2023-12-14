@@ -25,6 +25,8 @@ class GeneralLedgerReportWizard(models.TransientModel):
     date_range_id = fields.Many2one(comodel_name="date.range", string="Date range")
     date_from = fields.Date(required=True, default=lambda self: self._init_date_from())
     date_to = fields.Date(required=True, default=fields.Date.context_today)
+    due_date_from = fields.Date(required=True)
+    due_date_to = fields.Date(required=True)
     fy_start_date = fields.Date(compute="_compute_fy_start_date")
     target_move = fields.Selection(
         [("posted", "All Posted Entries"), ("all", "All Entries")],
@@ -288,6 +290,8 @@ class GeneralLedgerReportWizard(models.TransientModel):
             "wizard_id": self.id,
             "date_from": self.date_from,
             "date_to": self.date_to,
+            "due_date_to": self.due_date_to,
+            "due_date_from": self.due_date_from,
             "only_posted_moves": self.target_move == "posted",
             "hide_account_at_0": self.hide_account_at_0,
             "foreign_currency": self.foreign_currency,
